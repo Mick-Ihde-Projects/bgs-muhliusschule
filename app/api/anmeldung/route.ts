@@ -42,12 +42,12 @@ async function generatePDF(data: any, sanitize: (v: unknown) => string): Promise
   // Helper function to add section
   const addSection = (title: string, content: string[]) => {
     doc.setFontSize(12);
-    doc.setFont(undefined, 'bold');
+    doc.setFont('helvetica', 'bold');
     doc.text(title, 10, yPos);
     yPos += 7;
 
     doc.setFontSize(10);
-    doc.setFont(undefined, 'normal');
+    doc.setFont('helvetica', 'normal');
     content.forEach((line) => {
       if (yPos > 280) {
         doc.addPage();
