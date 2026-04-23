@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { z } from 'zod';
+import PDFDocument from 'pdfkit';
 
 const rateLimitMap = new Map<string, { count: number; resetAt: number }>();
 const MAX_PER_HOUR = 3;
@@ -28,6 +29,81 @@ function sanitize(value: unknown): string {
   if (typeof value !== 'string') return '';
   return value.replace(/[<>&"']/g, (c) => ({ '<': '&lt;', '>': '&gt;', '&': '&amp;', '"': '&quot;', "'": '&#x27;' }[c] ?? c));
 }
+
+async function generatePDF(data: any, sanitize: (v: unknown) => string): Promise<Buffer> {
+  return new Promise((resolve, reject) => {
+    const doc = new PDFDocument();
+    const chunks: Buffer[] = [];
+
+    doc.on('data', (chunk) => chunks.push(chunk));
+    doc.on('end', () => resolve(Buffer.concat(chunks)));
+    doc.on('error', reject);
+
+    // Title
+    doc.fontSize(18).font('Helvetica-Bold').text('Anmeldeformular', { align: 'center' }).moveDown();
+
+    // Kind
+    doc.fontSize(12).font('Helvetica-Bold').text('Angaben zum Kind').moveDown(0.5);
+    doc.fontSize(10).font('Helvetica')
+      .text(`Name: ${sanitize(data.kindVorname)} ${sanitize(data.kindNachname)}`)
+      .text(`Geburtsdatum: ${data.geburtsdatum}`)
+      .text(`Klassenstufe: ${data.klassenstufe}`)
+      .text(`Einschulungsdatum: ${data.einschulungsdatum}`)
+      .moveDown();
+
+    // Erziehungsberechtigte 1
+    doc.fontSize(12).font('Helvetica-Bold').text('Erziehungsberechtigte/r 1').moveDown(0.5);
+    doc.fontSize(10).font('Helvetica')
+      .text(`Name: ${sanitize(data.eltern1Vorname)} ${sanitize(data.eltern1Nachname)}`)
+      .text(`Telefon: ${sanitize(data.eltern1Telefon)}`)
+      .text(`E-Mail: ${sanitize(data.eltern1Email)}`)
+      .moveDown();
+
+    // Erziehungsberechtigte 2 (if present)
+    if (data.eltern2Vorname) {
+      doc.fontSize(12).font('Helvetica-Bold').text('Erziehungsberechtigte/r 2').moveDown(0.5);
+      doc.fontSize(10).font('Helvetica')
+        .text(`Name: ${sanitize(data.eltern2Vorname)} ${sanitize(data.eltern2Nachname)}`)
+        .text(`Telefon: ${sanitize(data.eltern2Telefon) || '–'}`)
+        .moveDown();
+    }
+
+    // Adresse
+    doc.fontSize(12).font('Helvetica-Bold').text('Adresse').moveDown(0.5);
+    doc.fontSize(10).font('Helvetica')
+      .text(`Straße: ${sanitize(data.strasse)}`)
+      .text(`PLZ/Ort: ${data.plz} ${sanitize(data.ort)}`)
+      .moveDown();
+
+    // Betreuung
+    doc.fontSize(12).font('Helvetica-Bold').text('Betreuung').moveDown(0.5);
+    doc.fontSize(10).font('Helvetica')
+      .text(`Betreuungsmodell: ${data.betreuungsmodell}`)
+      .text(`Ferienbetreuung: ${data.ferienbetreuung ? 'Ja' : 'Nein'}`)
+      .moveDown();
+
+    // Weitere Informationen
+    if (data.allergien || data.besonderheiten || data.abholberechtigte || data.notfallkontakt) {
+      doc.fontSize(12).font('Helvetica-Bold').text('Weitere Informationen').moveDown(0.5);
+      doc.fontSize(10).font('Helvetica');
+      if (data.allergien) doc.text(`Allergien: ${sanitize(data.allergien)}`);
+      if (data.besonderheiten) doc.text(`Besonderheiten: ${sanitize(data.besonderheiten)}`);
+      if (data.abholberechtigte) doc.text(`Abholberechtigte: ${sanitize(data.abholberechtigte)}`);
+      if (data.notfallkontakt) doc.text(`Notfallkontakt: ${sanitize(data.notfallkontakt)}`);
+      doc.moveDown();
+    }
+
+    // SEPA (basic info, no actual IBAN displayed for privacy)
+    doc.fontSize(12).font('Helvetica-Bold').text('Kontoinformationen').moveDown(0.5);
+    doc.fontSize(10).font('Helvetica')
+      .text(`Kontoinhaber: ${sanitize(data.kontoinhaber)}`)
+      .text('IBAN: [Verschlüsselt gespeichert]')
+      .moveDown();
+
+    doc.end();
+  });
+}
+
 
 const schema = z.object({
   kindVorname: z.string().min(2).max(100),
@@ -92,35 +168,49 @@ export async function POST(req: NextRequest) {
 
   try {
     if (process.env.RESEND_API_KEY) {
+      console.log('[RESEND] API key found, attempting to send email...');
       const { Resend } = await import('resend');
       const resend = new Resend(process.env.RESEND_API_KEY);
 
-      await resend.emails.send({
-        from: 'BGS Muhliusschule <noreply@bgs-muhliusschule.de>',
-        to: 'mickihde9@gmail.com', // betreute@bgs-muhliusschule.de
+      // Generate PDF
+      const pdfBuffer = await generatePDF(data, sanitize);
+
+      const emailResult = await resend.emails.send({
+        from: 'onboarding@resend.dev',
+        to: 'mickihde.bussiness@gmail.com',
         subject: `Neue Anmeldung: ${sanitized.kindName}`,
         text: `
           Neue Anmeldung eingegangen:
-                
+
           Kind: ${sanitized.kindName}
           Geburtsdatum: ${data.geburtsdatum}
           Klassenstufe: ${data.klassenstufe}
           Betreuungsmodell: ${data.betreuungsmodell}
           Ferienbetreuung: ${data.ferienbetreuung ? 'Ja' : 'Nein'}
-                
+
           Erziehungsberechtigte/r 1:
           ${sanitize(data.eltern1Vorname)} ${sanitize(data.eltern1Nachname)}
           Tel: ${sanitize(data.eltern1Telefon)}
           E-Mail: ${sanitize(data.eltern1Email)}
-                
+
           Adresse: ${sanitize(data.strasse)}, ${data.plz} ${sanitize(data.ort)}
-                
+
           Notfallkontakt: ${sanitize(data.notfallkontakt)}
           Allergien: ${sanitize(data.allergien || '–')}
         `.trim(),
+        attachments: [
+          {
+            filename: `anmeldung_${sanitized.kindName.replace(/\s+/g, '_')}_${Date.now()}.pdf`,
+            content: pdfBuffer.toString('base64'),
+          },
+        ],
       });
+      console.log('[RESEND] Email sent:', emailResult);
+    } else {
+      console.log('[RESEND] No API key found - emails will not be sent');
     }
-  } catch {
+  } catch (error) {
+    console.error('[RESEND] Error:', error);
     return NextResponse.json({ error: 'E-Mail-Versand fehlgeschlagen.' }, { status: 500 });
   }
 
