@@ -1,0 +1,39 @@
+# BGS Muhliusschule – LLM Description
+
+## Organization
+Name: BGS an der Muhliusschule – Betreute Grundschule & Offener Ganztag
+Operator: Freunde und Förderer der Muhliusschule Kiel e.V. (founded 1963)
+Type: Childcare / After-school care
+Location: Legienstr. 23, 24103 Kiel, Germany
+
+## Services
+- Betreute Grundschule (BGS): After-school care Mon–Fri until 17:00
+  - Grades 1+2: from 12:00
+  - Grades 3+4: from 13:00
+- Offener Ganztag (OGS): Full-day program since 2024
+- Holiday care: Mon–Fri 08:00–17:00 (excluding last 2 weeks of summer holidays and Christmas)
+- Homework support in class groups
+- Lunch provided by Soda & Bread (no pork)
+- AGs and creative activities
+
+## Contact
+Phone: 0431 – 901 544 0
+Mobile: 0176 – 622 300 20
+Email (care): betreute@bgs-muhliusschule.de
+Email (office): buero@bgs-muhliusschule.de
+Office hours: Mon–Fri from 11:00
+
+## Pages
+- /: Home – Welcome, highlights, CTA
+- /ueber-uns: About – History since 1963, philosophy, values
+- /betreuung: Care – Schedule, daily routine, activities
+- /offener-ganztag: OGS – Extended day program since 2024
+- /team: Team – Staff including directors Thorben Schulz and Daniel Schmidt
+- /eltern-info: Parents – ABC guide, costs, discounts, lunch info
+- /anmeldung: Registration – Digital sign-up form
+- /galerie: Gallery – Photos of rooms, activities, trips
+- /kontakt: Contact – Form, address, directions
+- /impressum: Legal – Imprint and privacy policy
+
+## Tech Stack
+Next.js 16 App Router · TypeScript · Tailwind CSS · Framer Motion · shadcn/ui · react-hook-form · Zod
