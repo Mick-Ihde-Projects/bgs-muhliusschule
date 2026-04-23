@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { z } from 'zod';
-import PDFDocument from 'pdfkit';
+import { jsPDF } from 'jspdf';
 
 const rateLimitMap = new Map<string, { count: number; resetAt: number }>();
 const MAX_PER_HOUR = 3;
@@ -31,77 +31,86 @@ function sanitize(value: unknown): string {
 }
 
 async function generatePDF(data: any, sanitize: (v: unknown) => string): Promise<Buffer> {
-  return new Promise((resolve, reject) => {
-    const doc = new PDFDocument();
-    const chunks: Buffer[] = [];
+  const doc = new jsPDF();
+  let yPos = 10;
 
-    doc.on('data', (chunk) => chunks.push(chunk));
-    doc.on('end', () => resolve(Buffer.concat(chunks)));
-    doc.on('error', reject);
+  // Title
+  doc.setFontSize(18);
+  doc.text('Anmeldeformular', doc.internal.pageSize.getWidth() / 2, yPos, { align: 'center' });
+  yPos += 15;
 
-    // Title
-    doc.fontSize(18).font('Helvetica-Bold').text('Anmeldeformular', { align: 'center' }).moveDown();
+  // Helper function to add section
+  const addSection = (title: string, content: string[]) => {
+    doc.setFontSize(12);
+    doc.setFont(undefined, 'bold');
+    doc.text(title, 10, yPos);
+    yPos += 7;
 
-    // Kind
-    doc.fontSize(12).font('Helvetica-Bold').text('Angaben zum Kind').moveDown(0.5);
-    doc.fontSize(10).font('Helvetica')
-      .text(`Name: ${sanitize(data.kindVorname)} ${sanitize(data.kindNachname)}`)
-      .text(`Geburtsdatum: ${data.geburtsdatum}`)
-      .text(`Klassenstufe: ${data.klassenstufe}`)
-      .text(`Einschulungsdatum: ${data.einschulungsdatum}`)
-      .moveDown();
+    doc.setFontSize(10);
+    doc.setFont(undefined, 'normal');
+    content.forEach((line) => {
+      if (yPos > 280) {
+        doc.addPage();
+        yPos = 10;
+      }
+      doc.text(line, 10, yPos);
+      yPos += 5;
+    });
+    yPos += 3;
+  };
 
-    // Erziehungsberechtigte 1
-    doc.fontSize(12).font('Helvetica-Bold').text('Erziehungsberechtigte/r 1').moveDown(0.5);
-    doc.fontSize(10).font('Helvetica')
-      .text(`Name: ${sanitize(data.eltern1Vorname)} ${sanitize(data.eltern1Nachname)}`)
-      .text(`Telefon: ${sanitize(data.eltern1Telefon)}`)
-      .text(`E-Mail: ${sanitize(data.eltern1Email)}`)
-      .moveDown();
+  // Kind
+  addSection('Angaben zum Kind', [
+    `Name: ${sanitize(data.kindVorname)} ${sanitize(data.kindNachname)}`,
+    `Geburtsdatum: ${data.geburtsdatum}`,
+    `Klassenstufe: ${data.klassenstufe}`,
+    `Einschulungsdatum: ${data.einschulungsdatum}`,
+  ]);
 
-    // Erziehungsberechtigte 2 (if present)
-    if (data.eltern2Vorname) {
-      doc.fontSize(12).font('Helvetica-Bold').text('Erziehungsberechtigte/r 2').moveDown(0.5);
-      doc.fontSize(10).font('Helvetica')
-        .text(`Name: ${sanitize(data.eltern2Vorname)} ${sanitize(data.eltern2Nachname)}`)
-        .text(`Telefon: ${sanitize(data.eltern2Telefon) || '–'}`)
-        .moveDown();
-    }
+  // Erziehungsberechtigte 1
+  addSection('Erziehungsberechtigte/r 1', [
+    `Name: ${sanitize(data.eltern1Vorname)} ${sanitize(data.eltern1Nachname)}`,
+    `Telefon: ${sanitize(data.eltern1Telefon)}`,
+    `E-Mail: ${sanitize(data.eltern1Email)}`,
+  ]);
 
-    // Adresse
-    doc.fontSize(12).font('Helvetica-Bold').text('Adresse').moveDown(0.5);
-    doc.fontSize(10).font('Helvetica')
-      .text(`Straße: ${sanitize(data.strasse)}`)
-      .text(`PLZ/Ort: ${data.plz} ${sanitize(data.ort)}`)
-      .moveDown();
+  // Erziehungsberechtigte 2 (if present)
+  if (data.eltern2Vorname) {
+    addSection('Erziehungsberechtigte/r 2', [
+      `Name: ${sanitize(data.eltern2Vorname)} ${sanitize(data.eltern2Nachname)}`,
+      `Telefon: ${sanitize(data.eltern2Telefon) || '–'}`,
+    ]);
+  }
 
-    // Betreuung
-    doc.fontSize(12).font('Helvetica-Bold').text('Betreuung').moveDown(0.5);
-    doc.fontSize(10).font('Helvetica')
-      .text(`Betreuungsmodell: ${data.betreuungsmodell}`)
-      .text(`Ferienbetreuung: ${data.ferienbetreuung ? 'Ja' : 'Nein'}`)
-      .moveDown();
+  // Adresse
+  addSection('Adresse', [
+    `Straße: ${sanitize(data.strasse)}`,
+    `PLZ/Ort: ${data.plz} ${sanitize(data.ort)}`,
+  ]);
 
-    // Weitere Informationen
-    if (data.allergien || data.besonderheiten || data.abholberechtigte || data.notfallkontakt) {
-      doc.fontSize(12).font('Helvetica-Bold').text('Weitere Informationen').moveDown(0.5);
-      doc.fontSize(10).font('Helvetica');
-      if (data.allergien) doc.text(`Allergien: ${sanitize(data.allergien)}`);
-      if (data.besonderheiten) doc.text(`Besonderheiten: ${sanitize(data.besonderheiten)}`);
-      if (data.abholberechtigte) doc.text(`Abholberechtigte: ${sanitize(data.abholberechtigte)}`);
-      if (data.notfallkontakt) doc.text(`Notfallkontakt: ${sanitize(data.notfallkontakt)}`);
-      doc.moveDown();
-    }
+  // Betreuung
+  addSection('Betreuung', [
+    `Betreuungsmodell: ${data.betreuungsmodell}`,
+    `Ferienbetreuung: ${data.ferienbetreuung ? 'Ja' : 'Nein'}`,
+  ]);
 
-    // SEPA (basic info, no actual IBAN displayed for privacy)
-    doc.fontSize(12).font('Helvetica-Bold').text('Kontoinformationen').moveDown(0.5);
-    doc.fontSize(10).font('Helvetica')
-      .text(`Kontoinhaber: ${sanitize(data.kontoinhaber)}`)
-      .text('IBAN: [Verschlüsselt gespeichert]')
-      .moveDown();
+  // Weitere Informationen
+  if (data.allergien || data.besonderheiten || data.abholberechtigte || data.notfallkontakt) {
+    const additionalInfo: string[] = [];
+    if (data.allergien) additionalInfo.push(`Allergien: ${sanitize(data.allergien)}`);
+    if (data.besonderheiten) additionalInfo.push(`Besonderheiten: ${sanitize(data.besonderheiten)}`);
+    if (data.abholberechtigte) additionalInfo.push(`Abholberechtigte: ${sanitize(data.abholberechtigte)}`);
+    if (data.notfallkontakt) additionalInfo.push(`Notfallkontakt: ${sanitize(data.notfallkontakt)}`);
+    addSection('Weitere Informationen', additionalInfo);
+  }
 
-    doc.end();
-  });
+  // SEPA (basic info, no actual IBAN displayed for privacy)
+  addSection('Kontoinformationen', [
+    `Kontoinhaber: ${sanitize(data.kontoinhaber)}`,
+    'IBAN: [Verschlüsselt gespeichert]',
+  ]);
+
+  return Buffer.from(doc.output('arraybuffer'));
 }
 
 
