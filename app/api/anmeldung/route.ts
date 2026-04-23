@@ -97,26 +97,26 @@ export async function POST(req: NextRequest) {
 
       await resend.emails.send({
         from: 'BGS Muhliusschule <noreply@bgs-muhliusschule.de>',
-        to: 'betreute@bgs-muhliusschule.de',
+        to: 'mickihde9@gmail.com', // betreute@bgs-muhliusschule.de
         subject: `Neue Anmeldung: ${sanitized.kindName}`,
         text: `
-Neue Anmeldung eingegangen:
-
-Kind: ${sanitized.kindName}
-Geburtsdatum: ${data.geburtsdatum}
-Klassenstufe: ${data.klassenstufe}
-Betreuungsmodell: ${data.betreuungsmodell}
-Ferienbetreuung: ${data.ferienbetreuung ? 'Ja' : 'Nein'}
-
-Erziehungsberechtigte/r 1:
-${sanitize(data.eltern1Vorname)} ${sanitize(data.eltern1Nachname)}
-Tel: ${sanitize(data.eltern1Telefon)}
-E-Mail: ${sanitize(data.eltern1Email)}
-
-Adresse: ${sanitize(data.strasse)}, ${data.plz} ${sanitize(data.ort)}
-
-Notfallkontakt: ${sanitize(data.notfallkontakt)}
-Allergien: ${sanitize(data.allergien || '–')}
+          Neue Anmeldung eingegangen:
+                
+          Kind: ${sanitized.kindName}
+          Geburtsdatum: ${data.geburtsdatum}
+          Klassenstufe: ${data.klassenstufe}
+          Betreuungsmodell: ${data.betreuungsmodell}
+          Ferienbetreuung: ${data.ferienbetreuung ? 'Ja' : 'Nein'}
+                
+          Erziehungsberechtigte/r 1:
+          ${sanitize(data.eltern1Vorname)} ${sanitize(data.eltern1Nachname)}
+          Tel: ${sanitize(data.eltern1Telefon)}
+          E-Mail: ${sanitize(data.eltern1Email)}
+                
+          Adresse: ${sanitize(data.strasse)}, ${data.plz} ${sanitize(data.ort)}
+                
+          Notfallkontakt: ${sanitize(data.notfallkontakt)}
+          Allergien: ${sanitize(data.allergien || '–')}
         `.trim(),
       });
     }

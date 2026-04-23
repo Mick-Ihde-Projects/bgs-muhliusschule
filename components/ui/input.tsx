@@ -4,6 +4,9 @@ import { cn } from "@/lib/utils"
 
 const Input = React.forwardRef<HTMLInputElement, React.ComponentProps<"input">>(
   ({ className, type, ...props }, ref) => {
+    const hasValueProp = Object.prototype.hasOwnProperty.call(props, "value")
+    const { value, ...restProps } = props
+
     return (
       <input
         type={type}
@@ -12,7 +15,8 @@ const Input = React.forwardRef<HTMLInputElement, React.ComponentProps<"input">>(
           className
         )}
         ref={ref}
-        {...props}
+        {...restProps}
+        value={hasValueProp ? (value ?? "") : undefined}
       />
     )
   }
