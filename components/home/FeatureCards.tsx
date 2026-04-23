@@ -42,7 +42,7 @@ export function FeatureCards() {
                   className="w-12 h-12 rounded-xl flex items-center justify-center mb-4"
                   style={{ background: `${colors.primary}15` }}
                 >
-                  <Icon className="w-6 h-6" style={{ color: colors.primary } as React.CSSProperties} />
+                  <span style={{ color: colors.primary }}><Icon className="w-6 h-6" /></span>
                 </div>
                 <h3 className="font-heading font-bold text-lg mb-2" style={{ color: colors.text }}>
                   {service.title}
