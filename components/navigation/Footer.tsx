@@ -1,5 +1,5 @@
 import Link from 'next/link';
-import { MapPin, Phone, Mail, Clock } from 'lucide-react';
+import { MapPin, Phone, Mail, Clock, ExternalLink } from 'lucide-react';
 import { ORGANIZATION, CONTACT, ROUTES } from '@/static/constants';
 import { colors } from '@/style/colors';
 
@@ -103,11 +103,32 @@ export function Footer() {
           </div>
         </div>
 
-        <div
-          className="mt-12 pt-6 text-sm text-center"
-          style={{ borderTop: `1px solid ${colors.muted}33`, color: colors.muted }}
-        >
-          © {new Date().getFullYear()} BGS Muhliusschule – {ORGANIZATION.name}. Alle Rechte vorbehalten.
+        <div className="mt-12 text-xs" >
+          <div className="flex items-center justify-center px-2 py-4 text-center">
+            <a
+              href="https://mickihde.de"
+              target="_blank"
+              rel="noopener noreferrer"
+              className="inline-flex items-center gap-1.5 hover:text-white transition-colors cursor-pointer"
+              style={{ color: colors.muted }}
+            >
+              <span>
+                Made with{' '}
+                <span className="font-semibold" style={{ color: '#FF5C8A' }}>
+                  ❤️
+                </span>{' '}
+                by Mick Ihde
+              </span>
+              <ExternalLink className="w-3 h-3" aria-hidden="true" />
+            </a>
+          </div>
+
+          <div className="pt-6 text-center" style={{ borderTop: `1px solid ${colors.muted}33`, color: colors.muted }}>
+            © {new Date().getFullYear()} {ORGANIZATION.name}. Alle Rechte vorbehalten.{' '}
+            <Link href={ROUTES.IMPRINT} className="hover:text-white transition-colors cursor-pointer">
+              Impressum
+            </Link>
+          </div>
         </div>
       </div>
     </footer>
