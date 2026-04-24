@@ -21,7 +21,7 @@ export function Hero() {
         }}
       />
 
-      <div className="container mx-auto px-4 py-24 relative z-10">
+      <div className="container mx-auto px-4 pb-24 pt-13 relative z-10">
         <div className="max-w-3xl">
           <motion.div
             initial="hidden"
