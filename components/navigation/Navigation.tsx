@@ -1,9 +1,22 @@
+'use client';
+
 import Link from 'next/link';
+import { usePathname } from 'next/navigation';
 import { navItems } from '@/static/navigation';
 import { MobileMenu } from './MobileMenu';
 import { colors } from '@/style/colors';
 
 export function Navigation() {
+  const pathname = usePathname();
+
+  const isActiveLink = (href: string) => {
+    if (href === '/') {
+      return pathname === '/';
+    }
+
+    return pathname === href || pathname.startsWith(`${href}/`);
+  };
+
   return (
     <header
       className="sticky top-0 z-50 shadow-sm"
@@ -24,16 +37,23 @@ export function Navigation() {
           </Link>
 
           <nav className="hidden lg:flex items-center gap-1">
-            {navItems.map((item) => (
-              <Link
-                key={item.href}
-                href={item.href}
-                className="px-3 py-2 rounded-lg text-sm font-medium transition-colors cursor-pointer hover:bg-[#2D6A4F]/10"
-                style={{ color: colors.text }}
-              >
-                {item.label}
-              </Link>
-            ))}
+            {navItems.map((item) => {
+              const isActive = isActiveLink(item.href);
+
+              return (
+                <Link
+                  key={item.href}
+                  href={item.href}
+                  aria-current={isActive ? 'page' : undefined}
+                  className={`px-3 py-2 rounded-lg text-sm font-medium transition-all duration-200 cursor-pointer hover:bg-[#2D6A4F]/10 hover:-translate-y-px ${isActive ? 'bg-[#2D6A4F]/10' : ''}`}
+                  style={{
+                    color: isActive ? colors.primary : colors.text,
+                  }}
+                >
+                  {item.label}
+                </Link>
+              );
+            })}
           </nav>
 
           <div className="flex items-center gap-3">

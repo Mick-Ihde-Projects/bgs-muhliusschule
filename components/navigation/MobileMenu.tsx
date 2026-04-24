@@ -2,6 +2,7 @@
 
 import { useState } from 'react';
 import Link from 'next/link';
+import { usePathname } from 'next/navigation';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Menu, X } from 'lucide-react';
 import { navItems } from '@/static/navigation';
@@ -10,6 +11,15 @@ import { slideDown } from '@/style/animations';
 
 export function MobileMenu() {
   const [open, setOpen] = useState(false);
+  const pathname = usePathname();
+
+  const isActiveLink = (href: string) => {
+    if (href === '/') {
+      return pathname === '/';
+    }
+
+    return pathname === href || pathname.startsWith(`${href}/`);
+  };
 
   return (
     <div className="lg:hidden">
@@ -33,17 +43,24 @@ export function MobileMenu() {
             style={{ background: colors.surface }}
           >
             <nav className="container mx-auto px-4 py-4 flex flex-col gap-1">
-              {navItems.map((item) => (
-                <Link
-                  key={item.href}
-                  href={item.href}
-                  onClick={() => setOpen(false)}
-                  className="px-4 py-3 rounded-lg text-base font-medium cursor-pointer hover:bg-[#2D6A4F]/10"
-                  style={{ color: colors.text }}
-                >
-                  {item.label}
-                </Link>
-              ))}
+              {navItems.map((item) => {
+                const isActive = isActiveLink(item.href);
+
+                return (
+                  <Link
+                    key={item.href}
+                    href={item.href}
+                    onClick={() => setOpen(false)}
+                    aria-current={isActive ? 'page' : undefined}
+                    className={`px-4 py-3 rounded-lg text-base font-medium cursor-pointer transition-colors duration-200 hover:bg-[#2D6A4F]/10 ${isActive ? 'bg-[#2D6A4F]/10' : ''}`}
+                    style={{
+                      color: isActive ? colors.primary : colors.text,
+                    }}
+                  >
+                    {item.label}
+                  </Link>
+                );
+              })}
               <Link
                 href="/anmeldung"
                 onClick={() => setOpen(false)}
