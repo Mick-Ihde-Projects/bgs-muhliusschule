@@ -6,6 +6,9 @@ const config: Config = {
     './components/**/*.{js,ts,jsx,tsx,mdx}',
     './public/**/*.{js,ts,jsx,tsx,mdx}',
   ],
+  future: {
+    hoverOnlyWhenSupported: false,
+  },
   theme: {
     extend: {
       colors: {

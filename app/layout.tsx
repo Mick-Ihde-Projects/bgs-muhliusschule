@@ -31,14 +31,14 @@ export default function RootLayout({
   children: React.ReactNode;
 }) {
   return (
-    <html lang="de" className="h-full">
+    <html lang="de" className="h-full" data-scroll-behavior="smooth">
       <head>
         <script
           type="application/ld+json"
           dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }}
         />
       </head>
-      <body className="min-h-full flex flex-col">
+      <body className="min-h-full flex flex-col" data-scroll-behavior="smooth">
         <ThemeProvider>
           <Navigation />
           <main className="flex-1">{children}</main>
