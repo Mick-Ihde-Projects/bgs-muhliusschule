@@ -30,14 +30,23 @@ body {
   font-family: 'Source Sans 3', sans-serif;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
+  user-select: none;
+  -webkit-user-select: none;
 }
 
 h1, h2, h3, h4, h5, h6 {
   font-family: 'Nunito', sans-serif;
 }
 
-p, li, span, td, th, label, input, textarea, select, button {
+input,
+textarea,
+select,
+[contenteditable="true"],
+a[href^="mailto:"],
+a[href^="tel:"],
+.copyable-text {
   user-select: text;
+  -webkit-user-select: text;
 }
 
 button, a[href], [role="button"] {
