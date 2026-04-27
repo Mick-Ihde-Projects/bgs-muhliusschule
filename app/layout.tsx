@@ -25,13 +25,29 @@ export const metadata: Metadata = {
   },
 };
 
+import { Nunito } from 'next/font/google'
+import { Source_Sans_3 } from 'next/font/google'
+
+const nunito = Nunito({
+  subsets: ['latin'],
+  weight: ["400", "500", "600", "700", "800", "900"],
+  variable: '--font-nunito',
+  display: 'swap',
+})
+const sourceSans3 = Source_Sans_3({
+  subsets: ['latin'],
+  weight: ["400", "500", "600", "700", "800", "900"],
+  variable: '--font-source-sans-3',
+  display: 'swap',
+})
+
 export default function RootLayout({
   children,
 }: {
   children: React.ReactNode;
 }) {
   return (
-    <html lang="de" className="h-full" data-scroll-behavior="smooth">
+    <html lang="de" className={`h-full ${nunito.variable} ${sourceSans3.variable}`} data-scroll-behavior="smooth">
       <head>
         <script
           type="application/ld+json"
